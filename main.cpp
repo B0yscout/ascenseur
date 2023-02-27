@@ -55,14 +55,15 @@ void modeManuel()
     int destination;
     char appel;
 
+    ascenseur->afficher();
+
+
     while(true)
     {
-        system("clear");
-        ascenseur->afficher();
-
+        
+        // on lance aléatoirement des appels aléatoirs.
         cout<<"Nouvel appel? O:oui | N:Non"<<endl;
         cin >> appel;
-        
 
         switch (appel)
         {
@@ -79,9 +80,52 @@ void modeManuel()
             break;
         }
 
+        // réafficher pour voir les nouveaux appels
+        system("clear");
+        ascenseur->afficher();
+        // sleep(1);
+
+        // lancer 1 cycle
         ascenseur->bouge();
+        //
+        
+        // afficher ascenseur
+        system("clear");
+        ascenseur->afficher();
+        // sleep(1);
+
 
     }
+
+    /*while(true)
+    {
+        system("clear");
+        ascenseur->afficher();
+
+        cout<<"Nouvel appel? O:oui | N:Non"<<endl;
+        cin >> appel;
+
+        switch (appel)
+        {
+        case 'O':
+        case 'o':
+            cout<<"Etage d'appel?:"<<endl;
+            cin >> depart;
+            cout<<"Etage de destination?:"<<endl;
+            cin >> destination;
+            ascenseur->appel(depart,destination);
+            break;
+        
+        default:
+            break;
+        }
+
+        system("clear");
+        ascenseur->afficher();
+
+        ascenseur->bouge();
+
+    }*/
 
 
 

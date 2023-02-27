@@ -22,13 +22,11 @@ void Ascenseur::bouge()
 void Ascenseur::afficher()
 {
 
-  /*
   cout<<" ---------------------- étages."<<endl;
   cout<<" |  ------------------- état de l'ascenseur (montant ou descendant)"<<endl;
   cout<<" |  |      ------------ ascenseur avec passagers (représentés par leurs destinations)"<<endl;
-  cout<<" |  |      |        --- personnes en attente (représentées par leurs destinations)"<<endl;
-  cout<<" |  |      |        |"<<endl<<endl;
-  */
+  cout<<" |  |      |       ---- personnes en attente (représentées par leurs destinations)"<<endl;
+  cout<<" |  |      |       |"<<endl<<endl;
   
   // ----- tic tac
   cout<<"           ";
@@ -85,7 +83,8 @@ void Ascenseur::afficher()
         else
           cout<<printCouleur(it->getDestination(),4);
       }    
-      for (int i=ETAGE_MIN;i<=ETAGE_MAX-this->aboard.size();i++)
+      // for (int i=0;i<=ETAGE_MAX-this->aboard.size();i++)
+      for (int i=this->aboard.size();i<PASSAGERS_MAX;i++)
       {
         cout<<"_";
       }
@@ -93,7 +92,10 @@ void Ascenseur::afficher()
       cout<<"]";
     }
     else {
-      cout<<"            ";
+      for (int i=0;i<PASSAGERS_MAX+2;i++)
+      {
+        cout<<" ";
+      }
     }
     // -----
 
@@ -129,30 +131,23 @@ void Ascenseur::appel(int dep, int dest)
 
 void EtatArret::bouge()
 {
-  
-  if (!this->monAscenseur->queue.empty() && (this->monAscenseur->queue.begin()->getDepart() > this->monAscenseur->etage))
-  {
-    this->monAscenseur->changerEtat(new EtatMontant);
-  }
-  else if (!this->monAscenseur->queue.empty() && (this->monAscenseur->queue.begin()->getDepart() < this->monAscenseur->etage))
-  {
-    this->monAscenseur->changerEtat(new EtatDescendant);
-  }
-  
-  else if ((this->monAscenseur->queue.begin()->getDepart() == this->monAscenseur->etage))
-  {
-    // ajouter le passager  à l'ascenseur
-    // this->monAscenseur->aboard.splice(this->monAscenseur->aboard.end(),this->monAscenseur->queue, this->monAscenseur->queue.begin());
-    this->embarquer();
 
-    // passer à l'état correspondant à sa destination
-    if (this->monAscenseur->aboard.begin()->getDestination() > this->monAscenseur->etage)
-      this->monAscenseur->changerEtat(new EtatMontant);
-    else
-      this->monAscenseur->changerEtat(new EtatDescendant);
+
+
+  if (!this->monAscenseur->queue.empty() && (this->monAscenseur->queue.begin()->getDepart() >= this->monAscenseur->etage))
+  {
+    EtatMontant *nouvelEtat = new EtatMontant;
+    this->monAscenseur->changerEtat(nouvelEtat);
+    nouvelEtat->embarquer();
 
   }
-  
+  else if (!this->monAscenseur->queue.empty() && (this->monAscenseur->queue.begin()->getDepart() <= this->monAscenseur->etage))
+  {
+    EtatDescendant *nouvelEtat = new EtatDescendant;
+    this->monAscenseur->changerEtat(nouvelEtat);
+    nouvelEtat->embarquer();
+
+  }  
   
 }
 
@@ -163,8 +158,8 @@ void EtatMontant::embarquer()
   // prendre à bord les passagers qui montent:
   for (auto it = this->monAscenseur->queue.begin(); it != this->monAscenseur->queue.end();) {
 
-    // si le passager est à l'étage courant ET (sa destination est vers le haut OU l'ascenseur est au dernier etatge)
-    if (it->getDepart()==this->monAscenseur->etage && ((it->getDestination() >= this->monAscenseur->etage)  || (this->monAscenseur->etage== ETAGE_MAX) ))
+    // si le passager est à l'étage courant ET (pas plus de PASSAGERS_MAX passagers) ET (passager monte OU l'ascenseur est à l'étage 0)
+    if ((it->getDepart()==this->monAscenseur->etage) && (this->monAscenseur->aboard.size()<PASSAGERS_MAX) && ( (it->getDestination() >= this->monAscenseur->etage)  || (this->monAscenseur->etage== ETAGE_MIN) ))
     {
 
       // ajouter le passager à bord ("aboard")
@@ -220,8 +215,8 @@ void EtatDescendant::embarquer()
   // prendre à bord les passagers qui descendent OU le dernier passager le la file (seul appel restant):
   for (auto it = this->monAscenseur->queue.begin(); it != this->monAscenseur->queue.end();) {
 
-    // si le passager est à l'étage courant ET ( descend OU l'ascenseur est à l'étage 0) : 
-    if (it->getDepart()==this->monAscenseur->etage && ((it->getDestination() <= this->monAscenseur->etage) || (this->monAscenseur->etage==ETAGE_MIN) )){
+    // si le passager est à l'étage courant ET (pas plus de MAX_PASSAGERS passagers) ET ( passager descend OU l'ascenseur est à l'étage MAX) : 
+    if ((it->getDepart()==this->monAscenseur->etage) && (this->monAscenseur->aboard.size()<PASSAGERS_MAX ) && ((it->getDestination() <= this->monAscenseur->etage) || (this->monAscenseur->etage==ETAGE_MAX) )){
 
       // ajouter le passager à bord ("aboard")
       // et le supprimer des appels en attente ("queue")
@@ -320,6 +315,7 @@ void EtatMontant::bouge()
   {
     this->monAscenseur->changerEtat(new EtatArret);
   }
+
   // si plus aucun passager à bord mais des appels à des étages inférieurs : passer à l'état DESCENDANT
   else if ((ascenseurVide && appelEnBas) || passagersDesc )
   {
